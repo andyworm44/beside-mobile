@@ -6,10 +6,8 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
 
 export default function SplashScreen() {
-  const navigation = useNavigation();
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.8);
 
@@ -27,13 +25,6 @@ export default function SplashScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-
-    // 2秒後跳轉到歡迎頁面
-    const timer = setTimeout(() => {
-      navigation.navigate('Welcome' as never);
-    }, 2000);
-
-    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -53,7 +44,7 @@ export default function SplashScreen() {
         <Text style={styles.logo}>Beside</Text>
         <Text style={styles.tagline}>Someone's here.</Text>
         <Text style={styles.description}>
-          在寂寞的時候{'\n'}
+          在焦慮的時候{'\n'}
           總有人陪在你身邊
         </Text>
       </Animated.View>

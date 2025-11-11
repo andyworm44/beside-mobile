@@ -55,7 +55,7 @@ export default function WelcomeScreen() {
           <Text style={styles.title}>Beside</Text>
           <Text style={styles.subtitle}>Someone's here.</Text>
           <Text style={styles.description}>
-            在寂寞的時候{'\n'}
+            在焦慮的時候{'\n'}
             總有人陪在你身邊{'\n'}
             簡單的陪伴，溫暖的力量
           </Text>

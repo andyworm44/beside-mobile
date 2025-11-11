@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { useUser } from '../context/UserContext';
 
 interface Response {
   id: string;
@@ -22,12 +24,22 @@ interface Response {
 }
 
 export default function ReceivedScreen() {
+  const { getMyResponses } = useUser();
   const [responses, setResponses] = useState<Response[]>([]);
-  // 移除複雜的動畫，使用簡單的實現
-  useEffect(() => {
-
-    // 模擬收到的回應數據
-    const mockResponses: Response[] = [
+  
+  // 每次進入頁面時重新載入回應
+    const loadResponses = async () => {
+      const response = await getMyResponses();
+      if (response.success) {
+      // 確保只顯示最新的一個回應
+      const latestResponse = Array.isArray(response.data) && response.data.length > 0 
+        ? [response.data[0]] 
+        : [];
+      setResponses(latestResponse);
+      } else {
+        console.error('❌ 獲取回應失敗:', response.error);
+        // 如果 API 失敗，使用模擬數據
+        const mockResponses: Response[] = [
       {
         id: '1',
         userName: '小明',
@@ -69,9 +81,21 @@ export default function ReceivedScreen() {
         isRead: false,
       },
     ];
-
-    setResponses(mockResponses);
+        setResponses(mockResponses);
+      }
+    };
+    
+  // 首次載入
+  useEffect(() => {
+    loadResponses();
   }, []);
+  
+  // 每次進入頁面時重新載入
+  useFocusEffect(
+    useCallback(() => {
+      loadResponses();
+    }, [getMyResponses])
+  );
 
   const getTimeAgo = (timestamp: number) => {
     const now = Date.now();
@@ -98,7 +122,12 @@ export default function ReceivedScreen() {
 
   const onResponsePress = (responseId: string) => {
     console.log('回應:', responseId);
-    // 這裡可以添加回應邏輯
+    // 從列表中移除該回應
+    setResponses(prevResponses => {
+      const newResponses = prevResponses.filter(response => response.id !== responseId);
+      console.log('移除前:', prevResponses.length, '移除後:', newResponses.length);
+      return newResponses;
+    });
   };
 
   const renderResponseCard = ({ item, index }: { item: Response; index: number }) => (
@@ -150,7 +179,7 @@ export default function ReceivedScreen() {
         <Ionicons name="heart-outline" size={45} color="#CCC" />
       </View>
       <Text style={styles.emptyTitle}>暫無收到的回應</Text>
-      <Text style={styles.emptyText}>當有人回應你的寂寞信號時，會顯示在這裡</Text>
+      <Text style={styles.emptyText}>當有人回應你的焦慮信號時，會顯示在這裡</Text>
     </View>
   );
 
@@ -189,7 +218,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 60,
     paddingBottom: 20,
   },
   title: {

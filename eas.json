@@ -1,0 +1,71 @@
+{
+  "cli": {
+    "version": ">= 5.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "API_URL": "https://your-test-server.com/api/v1"
+      }
+    },
+    "preview-testflight": {
+      "distribution": "store",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "API_URL": "https://beside-backend-production.up.railway.app/api/v1"
+      }
+    },
+    "production": {
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "API_URL": "https://your-production-server.com/api/v1"
+      }
+    }
+  },
+  "submit": {
+    "preview-testflight": {
+      "ios": {
+        "ascAppId": "6754879063"
+      }
+    },
+    "production": {
+      "ios": {
+        "ascAppId": "6754879063"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./path/to/service-account-key.json",
+        "track": "internal"
+      }
+    }
+  }
+}
+

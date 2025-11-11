@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
+import StatisticsChart from '../components/StatisticsChart';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const { user, setLoggedIn } = useUser();
   const fadeAnim = new Animated.Value(0);
+  const [showStatistics, setShowStatistics] = useState(false);
+
+  // 模擬數據
+  const signalData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const accompanyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const timeLabels = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -45,6 +52,14 @@ export default function SettingsScreen() {
   };
 
   const settingsSections = [
+    {
+      title: '統計數據',
+      items: [
+        { label: '發出訊號次數', value: '12', isStat: true },
+        { label: '陪伴他人次數', value: '8', isStat: true },
+        { label: '查看詳細統計', value: '', isChart: true },
+      ],
+    },
     {
       title: '個人資料',
       items: [
@@ -114,19 +129,31 @@ export default function SettingsScreen() {
                     onPress={() => {
                       if (item.label === '使用條款' || item.label === '隱私政策') {
                         Alert.alert('提示', `${item.label}功能開發中`);
+                      } else if (item.isStat) {
+                        // 統計數據項目不需要點擊功能
+                        return;
+                      } else if (item.isChart) {
+                        console.log('點擊查看詳細統計');
+                        setShowStatistics(true);
                       }
                     }}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.settingLabel}>{item.label}</Text>
                     <View style={styles.settingRight}>
-                      {item.value && <Text style={styles.settingValue}>{item.value}</Text>}
+                      {item.isStat ? (
+                        <Text style={styles.statValue}>{item.value || '0'}</Text>
+                      ) : item.isChart ? (
+                        <Text style={styles.chartText}>圖表</Text>
+                      ) : item.value && (
+                        <Text style={styles.settingValue}>{item.value}</Text>
+                      )}
                       {item.isToggle ? (
                         <View style={[styles.toggle, item.isActive && styles.toggleActive]}>
                           <View style={[styles.toggleThumb, item.isActive && styles.toggleThumbActive]} />
                         </View>
                       ) : (
-                        item.hasArrow && <Ionicons name="chevron-forward" size={16} color="#CCC" />
+                        (item.hasArrow || item.isChart) && <Ionicons name="chevron-forward" size={16} color="#CCC" />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -142,8 +169,90 @@ export default function SettingsScreen() {
           >
             <Text style={styles.logoutText}>登出</Text>
           </TouchableOpacity>
+          
+          {/* 測試按鈕 */}
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: '#4ECDC4', marginTop: 10 }]}
+            onPress={() => {
+              console.log('測試按鈕點擊');
+              setShowStatistics(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.logoutText, { color: '#fff' }]}>測試統計圖表</Text>
+          </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+
+      {/* Statistics Chart Modal */}
+      {showStatistics && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>詳細統計</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => {
+                  console.log('關閉統計圖表');
+                  setShowStatistics(false);
+                }}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.chartScrollView}>
+              <View style={styles.simpleChart}>
+                <Text style={styles.chartTitle}>發出訊號統計</Text>
+                <View style={styles.chartContainer}>
+                  {signalData.map((value, index) => (
+                    <View key={index} style={styles.chartBar}>
+                      <View 
+                        style={[
+                          styles.bar, 
+                          { 
+                            height: value > 0 ? `${Math.min(value * 3, 100)}%` : '2%',
+                            backgroundColor: value > 0 ? '#FF6B6B' : '#555'
+                          }
+                        ]} 
+                      />
+                      <Text style={styles.barLabel}>{timeLabels[index]}</Text>
+                    </View>
+                  ))}
+                </View>
+                
+                <Text style={styles.chartTitle}>陪伴他人統計</Text>
+                <View style={styles.chartContainer}>
+                  {accompanyData.map((value, index) => (
+                    <View key={index} style={styles.chartBar}>
+                      <View 
+                        style={[
+                          styles.bar, 
+                          { 
+                            height: value > 0 ? `${Math.min(value * 3, 100)}%` : '2%',
+                            backgroundColor: value > 0 ? '#4ECDC4' : '#555'
+                          }
+                        ]} 
+                      />
+                      <Text style={styles.barLabel}>{timeLabels[index]}</Text>
+                    </View>
+                  ))}
+                </View>
+                
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statLabel}>發出訊號總次數</Text>
+                    <Text style={styles.statValue}>{signalData.reduce((a, b) => a + b, 0)}</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statLabel}>陪伴他人總次數</Text>
+                    <Text style={styles.statValue}>{accompanyData.reduce((a, b) => a + b, 0)}</Text>
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </LinearGradient>
   );
 }
@@ -210,6 +319,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
   },
+  statValue: {
+    fontSize: 16,
+    color: '#4ECDC4',
+    fontWeight: '600',
+  },
+  chartText: {
+    fontSize: 14,
+    color: '#4ECDC4',
+    fontWeight: '500',
+  },
   toggle: {
     width: 50,
     height: 30,
@@ -249,5 +368,114 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     fontSize: 16,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    width: '95%',
+    height: '90%',
+    backgroundColor: '#1e1e1e',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chartScrollView: {
+    flex: 1,
+  },
+  simpleChart: {
+    padding: 20,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  chartContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 120,
+    backgroundColor: '#333',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 20,
+  },
+  chartBar: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 1,
+  },
+  bar: {
+    width: '80%',
+    borderRadius: 2,
+    minHeight: 2,
+  },
+  barLabel: {
+    fontSize: 10,
+    color: '#999',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#333',
+    borderRadius: 12,
+    padding: 15,
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

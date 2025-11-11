@@ -101,7 +101,7 @@ export default function SimpleHomeScreen() {
               </LinearGradient>
             </TouchableOpacity>
             
-            <Text style={styles.mainText}>感到寂寞了嗎？</Text>
+            <Text style={styles.mainText}>感到焦慮了嗎？</Text>
             <Text style={styles.subText}>
               輕觸上方按鈕{'\n'}
               讓附近的人知道你需要陪伴
