@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   ScrollView,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const [isPressed, setIsPressed] = useState(false);
   const [intensity, setIntensity] = useState(0);
   const [biteCount, setBiteCount] = useState(0);
+  const [pickCount, setPickCount] = useState(0);
   const [lastBiteTime, setLastBiteTime] = useState<number | null>(null); // 最後一次咬指甲時間（用 state 以便觸發 useEffect）
   
   const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 5秒自動發送計時器
@@ -32,6 +34,7 @@ export default function HomeScreen() {
   const shakeAnim = useRef(new Animated.Value(0)).current; // 震動動畫
   const rotateAnim = useRef(new Animated.Value(0)).current; // 旋轉動畫
   const colorAnim = useRef(new Animated.Value(0)).current; // 顏色變化動畫
+  const fingerAnim = useRef(new Animated.Value(0)).current; // 摳手動畫（位移）
   
   // 初始加载动画
   useEffect(() => {
@@ -194,6 +197,28 @@ export default function HomeScreen() {
     // 重置5秒計時器（會在 useEffect 中處理）
   };
 
+  const playPickAnimation = () => {
+    fingerAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(fingerAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.spring(fingerAnim, {
+        toValue: 0,
+        tension: 100,
+        friction: 6,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handlePick = () => {
+    playPickAnimation();
+    setPickCount(prev => prev + 1);
+  };
+
   const sendSignal = async (intensityValue: number = 0) => {
     if (lonelySignal) {
       // 取消信號
@@ -344,6 +369,45 @@ export default function HomeScreen() {
           {!lonelySignal ? (
             <View style={styles.lonelyContainer}>
               <View style={styles.heartWrapper}>
+                <View style={styles.babyHandSection}>
+                  <View style={styles.handArtContainer}>
+                    <Image source={require('../../assets/baby-hand.png')} style={styles.handImage} />
+                    <Animated.View
+                      style={[
+                        styles.fingerOverlay,
+                        {
+                          transform: [
+                            {
+                              translateY: fingerAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, -18],
+                              }),
+                            },
+                            {
+                              translateX: fingerAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, -12],
+                              }),
+                            },
+                            {
+                              rotate: fingerAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ['0deg', '-12deg'],
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                    />
+                  </View>
+                  <TouchableOpacity style={styles.pickButton} activeOpacity={0.85} onPress={handlePick}>
+                    <Text style={styles.pickButtonText}>摳一下手</Text>
+                  </TouchableOpacity>
+                  {pickCount > 0 && (
+                    <Text style={styles.pickCountText}>今天已摳手 {pickCount} 次</Text>
+                  )}
+                </View>
+
                 <Animated.View
                   style={[
                     styles.lonelyCircle,
@@ -637,6 +701,53 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     fontWeight: '600',
     textAlign: 'center',
+  },
+  babyHandSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+    gap: 12,
+  },
+  handArtContainer: {
+    width: 200,
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  handImage: {
+    width: 200,
+    height: 220,
+    resizeMode: 'contain',
+  },
+  fingerOverlay: {
+    position: 'absolute',
+    width: 56,
+    height: 90,
+    borderRadius: 30,
+    backgroundColor: '#F4A460',
+    bottom: 70,
+    right: 76,
+    shadowColor: '#D36B2A',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
+  pickButton: {
+    backgroundColor: '#FFE0E0',
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 999,
+    shadowColor: '#FF6B6B',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  pickButtonText: {
+    color: '#FF6B6B',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  pickCountText: {
+    fontSize: 13,
+    color: '#FF8E8E',
+    fontWeight: '500',
   },
   statusCard: {
     backgroundColor: 'white',
