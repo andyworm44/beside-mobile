@@ -19,7 +19,8 @@ export default function HomeScreen() {
   const [responseCount, setResponseCount] = useState(0);
   const [isPressed, setIsPressed] = useState(false);
   const [intensity, setIntensity] = useState(0);
-  const [lastHitTime, setLastHitTime] = useState<number | null>(null); // 最後一次拍打時間（用 state 以便觸發 useEffect）
+  const [biteCount, setBiteCount] = useState(0);
+  const [lastBiteTime, setLastBiteTime] = useState<number | null>(null); // 最後一次咬指甲時間（用 state 以便觸發 useEffect）
   
   const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 5秒自動發送計時器
   const hasSentSignalRef = useRef<boolean>(false);
@@ -27,7 +28,7 @@ export default function HomeScreen() {
   
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const statusCardAnim = useRef(new Animated.Value(0)).current;
-  const hitAnim = useRef(new Animated.Value(1)).current; // 拍打動畫（scaleY）
+  const biteAnim = useRef(new Animated.Value(1)).current; // 咬指甲動畫（scaleY）
   const shakeAnim = useRef(new Animated.Value(0)).current; // 震動動畫
   const rotateAnim = useRef(new Animated.Value(0)).current; // 旋轉動畫
   const colorAnim = useRef(new Animated.Value(0)).current; // 顏色變化動畫
@@ -43,8 +44,8 @@ export default function HomeScreen() {
     }).start();
   }, []);
   
-  // 拍打動畫（向下壓縮 + 震動 + 旋轉 + 顏色變化）
-  const playHitAnimation = () => {
+  // 咬指甲動畫（向下壓縮 + 震動 + 旋轉 + 顏色變化）
+  const playBiteAnimation = () => {
     // 觸覺反饋 - 強烈震動
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     
@@ -57,12 +58,12 @@ export default function HomeScreen() {
     Animated.parallel([
       // 壓縮動畫（更強烈）
       Animated.sequence([
-        Animated.timing(hitAnim, {
+        Animated.timing(biteAnim, {
           toValue: 0.6, // 壓縮到60%（更扁）
           duration: 80,
           useNativeDriver: true,
         }),
-        Animated.spring(hitAnim, {
+        Animated.spring(biteAnim, {
           toValue: 1,
           tension: 200,
           friction: 4,
@@ -87,7 +88,7 @@ export default function HomeScreen() {
           useNativeDriver: true,
         }),
       ]),
-      // 旋轉動畫（被拍打時稍微旋轉）
+      // 旋轉動畫（咬指甲時稍微晃動）
       Animated.sequence([
         Animated.timing(rotateAnim, {
           toValue: 1,
@@ -101,7 +102,7 @@ export default function HomeScreen() {
           useNativeDriver: true,
         }),
       ]),
-      // 顏色變化（被拍打時變紅）
+      // 顏色變化（咬指甲時變紅）
       Animated.sequence([
         Animated.timing(colorAnim, {
           toValue: 1,
@@ -135,26 +136,28 @@ export default function HomeScreen() {
       autoSendTimeoutRef.current = null;
     }
     
-    // 如果有最後一次拍打時間且強度 > 0，設置5秒計時器
-    if (lastHitTime && intensity > 0 && !lonelySignal) {
-      const timeSinceLastHit = Date.now() - lastHitTime;
-      const remainingTime = Math.max(0, 5000 - timeSinceLastHit);
+    // 如果有最後一次咬指甲時間且強度 > 0，設置5秒計時器
+    if (lastBiteTime && intensity > 0 && !lonelySignal) {
+      const timeSinceLastBite = Date.now() - lastBiteTime;
+      const remainingTime = Math.max(0, 5000 - timeSinceLastBite);
       
       if (remainingTime > 0) {
         console.log(`⏰ 設置 ${remainingTime}ms 後自動發送訊號，當前強度:`, intensity);
         autoSendTimeoutRef.current = setTimeout(() => {
-          console.log('⏰ 5秒無操作，自動發送訊號，強度:', intensity);
+        console.log('⏰ 5秒無操作，自動發送訊號，強度:', intensity);
           sendSignal(intensity);
           // 重置
           setIntensity(0);
-          setLastHitTime(null);
+          setBiteCount(0);
+          setLastBiteTime(null);
         }, remainingTime);
       } else {
         // 已經超過5秒，立即發送
         console.log('⏰ 已超過5秒，立即發送訊號，強度:', intensity);
         sendSignal(intensity);
         setIntensity(0);
-        setLastHitTime(null);
+        setBiteCount(0);
+        setLastBiteTime(null);
       }
     }
     
@@ -164,28 +167,29 @@ export default function HomeScreen() {
         autoSendTimeoutRef.current = null;
       }
     };
-  }, [intensity, lastHitTime, lonelySignal]);
+  }, [intensity, lastBiteTime, lonelySignal]);
 
-  // 拍打兔子（點擊時）
-  const handleHit = () => {
+  // 咬指甲（點擊時）
+  const handleBite = () => {
     if (lonelySignal) {
       // 如果已有訊號，點擊取消
       sendSignal(0);
       return;
     }
     
-    // 播放拍打動畫
-    playHitAnimation();
+    // 播放咬指甲動畫
+    playBiteAnimation();
     
-    // 增加強度（每次拍打 +5，最多200）
+    // 增加強度（每次咬指甲 +5，最多200）
     setIntensity(prev => {
       const newIntensity = Math.min(prev + 5, 200);
-      console.log('👊 拍打兔子，強度:', newIntensity);
+      console.log('😬 咬指甲，強度:', newIntensity);
       return newIntensity;
     });
+    setBiteCount(prev => prev + 1);
     
-    // 更新最後拍打時間
-    setLastHitTime(Date.now());
+    // 更新最後咬指甲時間
+    setLastBiteTime(Date.now());
     
     // 重置5秒計時器（會在 useEffect 中處理）
   };
@@ -209,6 +213,7 @@ export default function HomeScreen() {
         }).start(() => {
           setLonelySignal(null);
           setResponseCount(0);
+          setBiteCount(0);
         });
         console.log('✅ 信號已取消');
       } else {
@@ -226,7 +231,8 @@ export default function HomeScreen() {
         
         // 重置強度和計時器
         setIntensity(0);
-        setLastHitTime(null);
+        setBiteCount(0);
+        setLastBiteTime(null);
         if (autoSendTimeoutRef.current) {
           clearTimeout(autoSendTimeoutRef.current);
           autoSendTimeoutRef.current = null;
@@ -241,7 +247,7 @@ export default function HomeScreen() {
           useNativeDriver: true,
         }).start();
         
-        // 2.5秒后自动隐藏状态卡片，回到兔子画面
+        // 2.5秒后自动隐藏状态卡片，回到熊熊畫面
         if (autoHideTimeoutRef.current) {
           clearTimeout(autoHideTimeoutRef.current);
         }
@@ -265,7 +271,7 @@ export default function HomeScreen() {
   const handlePressIn = () => {
     setIsPressed(true);
     // 按下時稍微壓縮（視覺反饋）
-    Animated.timing(hitAnim, {
+    Animated.timing(biteAnim, {
       toValue: 0.95,
       duration: 50,
       useNativeDriver: true,
@@ -275,7 +281,7 @@ export default function HomeScreen() {
   const handlePressOut = () => {
     setIsPressed(false);
     // 鬆開時恢復
-    Animated.spring(hitAnim, {
+    Animated.spring(biteAnim, {
       toValue: 1,
       tension: 300,
       friction: 5,
@@ -344,7 +350,7 @@ export default function HomeScreen() {
                     {
                       transform: [
                         { scale: scaleAnim },
-                        { scaleY: hitAnim }, // 拍打時向下壓縮
+                        { scaleY: biteAnim }, // 咬指甲時向下壓縮
                         {
                           translateX: shakeAnim.interpolate({
                             inputRange: [-1, 0, 1],
@@ -362,7 +368,7 @@ export default function HomeScreen() {
                   ]}
                 >
                   <TouchableOpacity
-                    onPress={handleHit}
+                    onPress={handleBite}
                     onPressIn={handlePressIn}
                     onPressOut={handlePressOut}
                     activeOpacity={1}
@@ -374,7 +380,7 @@ export default function HomeScreen() {
                         {
                           backgroundColor: colorAnim.interpolate({
                             inputRange: [0, 1],
-                            outputRange: ['transparent', 'rgba(255, 0, 0, 0.3)'], // 被拍打時變紅
+                            outputRange: ['transparent', 'rgba(255, 0, 0, 0.3)'], // 咬指甲時變紅
                           }),
                         },
                       ]}
@@ -395,7 +401,7 @@ export default function HomeScreen() {
                 {intensity > 0 && (
                   <View style={styles.intensityContainer}>
                     <View style={styles.intensityBox}>
-                      <Text style={styles.intensityLabel}>孤單強度指數</Text>
+                      <Text style={styles.intensityLabel}>焦慮強度指數</Text>
                       <Text style={styles.intensityValue}>{intensity}</Text>
                     </View>
                   </View>
@@ -404,9 +410,12 @@ export default function HomeScreen() {
               
               <Text style={styles.mainText}>感到焦慮了嗎？</Text>
               <Text style={styles.subText}>
-                拍打熊熊累積強度{'\n'}
-                5秒不拍打會自動發送訊號
+                咬指甲累積強度{'\n'}
+                5秒不咬指甲會自動發送訊號
               </Text>
+              {biteCount > 0 && (
+                <Text style={styles.biteCountText}>今天已咬指甲 {biteCount} 次</Text>
+              )}
             </View>
           ) : (
             <Animated.View
@@ -621,6 +630,13 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  biteCountText: {
+    marginTop: 10,
+    fontSize: 13,
+    color: '#FF6B6B',
+    fontWeight: '600',
+    textAlign: 'center',
   },
   statusCard: {
     backgroundColor: 'white',
