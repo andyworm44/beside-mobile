@@ -7,17 +7,25 @@ import {
   ScrollView,
   Animated,
   Alert,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
-import StatisticsChart from '../components/StatisticsChart';
+import apiService from '../services/api';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const { user, setLoggedIn } = useUser();
+  const { user, setUser, setLoggedIn, authToken } = useUser();
   const fadeAnim = new Animated.Value(0);
+  
+  const [editNameVisible, setEditNameVisible] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -26,6 +34,37 @@ export default function SettingsScreen() {
       useNativeDriver: true,
     }).start();
   }, []);
+
+  const handleUpdateName = async () => {
+    if (!newName.trim()) {
+      Alert.alert('提示', '暱稱不能為空');
+      return;
+    }
+    
+    if (!authToken) {
+      Alert.alert('錯誤', '未登入');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await apiService.updateProfile(authToken, { name: newName.trim() });
+      if (response.success) {
+        // 更新本地 user state
+        if (user) {
+          setUser({ ...user, name: newName.trim() });
+        }
+        setEditNameVisible(false);
+        Alert.alert('成功', '暱稱已更新');
+      } else {
+        Alert.alert('錯誤', response.error || '更新失敗');
+      }
+    } catch (error) {
+      Alert.alert('錯誤', '網絡錯誤');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -49,7 +88,15 @@ export default function SettingsScreen() {
     {
       title: '個人資料',
       items: [
-        { label: '暱稱', value: user?.name, hasArrow: true },
+        { 
+          label: '暱稱', 
+          value: user?.name, 
+          hasArrow: true,
+          onPress: () => {
+            setNewName(user?.name || '');
+            setEditNameVisible(true);
+          }
+        },
         { label: '性別', value: user?.gender === 'male' ? '男' : user?.gender === 'female' ? '女' : '其他', hasArrow: true },
         { label: '生日', value: user?.birthday, hasArrow: true },
       ],
@@ -113,6 +160,11 @@ export default function SettingsScreen() {
                     key={itemIndex}
                     style={styles.settingItem}
                     onPress={() => {
+                      if (item.onPress) {
+                        item.onPress();
+                        return;
+                      }
+                      
                       if (item.label === '使用條款' || item.label === '隱私政策') {
                         Alert.alert('提示', `${item.label}功能開發中`);
                       }
@@ -147,6 +199,50 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+
+      {/* Edit Name Modal */}
+      <Modal
+        visible={editNameVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setEditNameVisible(false)}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.editModalContent}>
+            <Text style={styles.editModalTitle}>修改暱稱</Text>
+            
+            <TextInput
+              style={styles.input}
+              value={newName}
+              onChangeText={setNewName}
+              placeholder="請輸入新暱稱"
+              placeholderTextColor="#999"
+              autoFocus={true}
+              maxLength={20}
+            />
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.cancelButton]}
+                onPress={() => setEditNameVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>取消</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, styles.saveButton]}
+                onPress={handleUpdateName}
+                disabled={isSaving}
+              >
+                <Text style={styles.saveButtonText}>{isSaving ? '保存中...' : '保存'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -269,107 +365,66 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
   },
-  modalContent: {
-    width: '95%',
-    height: '90%',
-    backgroundColor: '#1e1e1e',
+  editModalContent: {
+    width: '80%',
+    backgroundColor: 'white',
     borderRadius: 20,
-    overflow: 'hidden',
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 2,
     },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 20,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  modalTitle: {
+  editModalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
-  },
-  closeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chartScrollView: {
-    flex: 1,
-  },
-  simpleChart: {
-    padding: 20,
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 15,
+    color: '#333',
+    marginBottom: 20,
     textAlign: 'center',
   },
-  chartContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: 120,
-    backgroundColor: '#333',
-    borderRadius: 12,
-    padding: 10,
+  input: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+    color: '#333',
     marginBottom: 20,
   },
-  chartBar: {
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 1,
-  },
-  bar: {
-    width: '80%',
-    borderRadius: 2,
-    minHeight: 2,
-  },
-  barLabel: {
-    fontSize: 10,
-    color: '#999',
-    marginTop: 5,
-    textAlign: 'center',
-  },
-  statsGrid: {
+  modalActions: {
     flexDirection: 'row',
-    gap: 15,
+    justifyContent: 'space-between',
+    gap: 10,
   },
-  statCard: {
+  actionButton: {
     flex: 1,
-    backgroundColor: '#333',
-    borderRadius: 12,
-    padding: 15,
+    paddingVertical: 12,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 8,
-    textAlign: 'center',
+  cancelButton: {
+    backgroundColor: '#F0F0F0',
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
+  saveButton: {
+    backgroundColor: '#FF6B6B',
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
