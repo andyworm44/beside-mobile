@@ -18,12 +18,6 @@ export default function SettingsScreen() {
   const navigation = useNavigation();
   const { user, setLoggedIn } = useUser();
   const fadeAnim = new Animated.Value(0);
-  const [showStatistics, setShowStatistics] = useState(false);
-
-  // 模擬數據
-  const signalData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  const accompanyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  const timeLabels = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -52,14 +46,6 @@ export default function SettingsScreen() {
   };
 
   const settingsSections = [
-    {
-      title: '統計數據',
-      items: [
-        { label: '發出訊號次數', value: '12', isStat: true },
-        { label: '陪伴他人次數', value: '8', isStat: true },
-        { label: '查看詳細統計', value: '', isChart: true },
-      ],
-    },
     {
       title: '個人資料',
       items: [
@@ -129,23 +115,13 @@ export default function SettingsScreen() {
                     onPress={() => {
                       if (item.label === '使用條款' || item.label === '隱私政策') {
                         Alert.alert('提示', `${item.label}功能開發中`);
-                      } else if (item.isStat) {
-                        // 統計數據項目不需要點擊功能
-                        return;
-                      } else if (item.isChart) {
-                        console.log('點擊查看詳細統計');
-                        setShowStatistics(true);
                       }
                     }}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.settingLabel}>{item.label}</Text>
                     <View style={styles.settingRight}>
-                      {item.isStat ? (
-                        <Text style={styles.statValue}>{item.value || '0'}</Text>
-                      ) : item.isChart ? (
-                        <Text style={styles.chartText}>圖表</Text>
-                      ) : item.value && (
+                      {item.value && (
                         <Text style={styles.settingValue}>{item.value}</Text>
                       )}
                       {item.isToggle ? (
@@ -153,7 +129,7 @@ export default function SettingsScreen() {
                           <View style={[styles.toggleThumb, item.isActive && styles.toggleThumbActive]} />
                         </View>
                       ) : (
-                        (item.hasArrow || item.isChart) && <Ionicons name="chevron-forward" size={16} color="#CCC" />
+                        (item.hasArrow) && <Ionicons name="chevron-forward" size={16} color="#CCC" />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -169,90 +145,8 @@ export default function SettingsScreen() {
           >
             <Text style={styles.logoutText}>登出</Text>
           </TouchableOpacity>
-          
-          {/* 測試按鈕 */}
-          <TouchableOpacity
-            style={[styles.logoutButton, { backgroundColor: '#4ECDC4', marginTop: 10 }]}
-            onPress={() => {
-              console.log('測試按鈕點擊');
-              setShowStatistics(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.logoutText, { color: '#fff' }]}>測試統計圖表</Text>
-          </TouchableOpacity>
         </Animated.View>
       </ScrollView>
-
-      {/* Statistics Chart Modal */}
-      {showStatistics && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>詳細統計</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => {
-                  console.log('關閉統計圖表');
-                  setShowStatistics(false);
-                }}
-              >
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.chartScrollView}>
-              <View style={styles.simpleChart}>
-                <Text style={styles.chartTitle}>發出訊號統計</Text>
-                <View style={styles.chartContainer}>
-                  {signalData.map((value, index) => (
-                    <View key={index} style={styles.chartBar}>
-                      <View 
-                        style={[
-                          styles.bar, 
-                          { 
-                            height: value > 0 ? `${Math.min(value * 3, 100)}%` : '2%',
-                            backgroundColor: value > 0 ? '#FF6B6B' : '#555'
-                          }
-                        ]} 
-                      />
-                      <Text style={styles.barLabel}>{timeLabels[index]}</Text>
-                    </View>
-                  ))}
-                </View>
-                
-                <Text style={styles.chartTitle}>陪伴他人統計</Text>
-                <View style={styles.chartContainer}>
-                  {accompanyData.map((value, index) => (
-                    <View key={index} style={styles.chartBar}>
-                      <View 
-                        style={[
-                          styles.bar, 
-                          { 
-                            height: value > 0 ? `${Math.min(value * 3, 100)}%` : '2%',
-                            backgroundColor: value > 0 ? '#4ECDC4' : '#555'
-                          }
-                        ]} 
-                      />
-                      <Text style={styles.barLabel}>{timeLabels[index]}</Text>
-                    </View>
-                  ))}
-                </View>
-                
-                <View style={styles.statsGrid}>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statLabel}>發出訊號總次數</Text>
-                    <Text style={styles.statValue}>{signalData.reduce((a, b) => a + b, 0)}</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statLabel}>陪伴他人總次數</Text>
-                    <Text style={styles.statValue}>{accompanyData.reduce((a, b) => a + b, 0)}</Text>
-                  </View>
-                </View>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      )}
     </LinearGradient>
   );
 }
