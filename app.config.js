@@ -4,7 +4,7 @@ export default {
     slug: "beside-mobile",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/icon.svg",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     splash: {
