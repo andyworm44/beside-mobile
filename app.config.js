@@ -15,7 +15,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.beside.mobile",
-      buildNumber: "4"
+      buildNumber: "5"
     },
     android: {
       adaptiveIcon: {
