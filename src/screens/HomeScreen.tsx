@@ -7,6 +7,7 @@ import {
   Animated,
   ScrollView,
   Image,
+  Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +22,6 @@ export default function HomeScreen() {
   const [isPressed, setIsPressed] = useState(false);
   const [intensity, setIntensity] = useState(0);
   const [biteCount, setBiteCount] = useState(0);
-  const [pickCount, setPickCount] = useState(0);
   const [lastBiteTime, setLastBiteTime] = useState<number | null>(null); // 最後一次咬指甲時間（用 state 以便觸發 useEffect）
   
   const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null); // 5秒自動發送計時器
@@ -34,7 +34,7 @@ export default function HomeScreen() {
   const shakeAnim = useRef(new Animated.Value(0)).current; // 震動動畫
   const rotateAnim = useRef(new Animated.Value(0)).current; // 旋轉動畫
   const colorAnim = useRef(new Animated.Value(0)).current; // 顏色變化動畫
-  const fingerAnim = useRef(new Animated.Value(0)).current; // 摳手動畫（位移）
+  // const fingerAnim = useRef(new Animated.Value(0)).current; // 移除舊的摳手動畫
   
   // 初始加载动画
   useEffect(() => {
@@ -124,10 +124,10 @@ export default function HomeScreen() {
   // 根據強度獲取痛苦表情
   const getRabbitFace = (intensity: number): string => {
     if (intensity === 0) return '🧸'; // 正常熊
-    if (intensity < 20) return '😐'; // 開始不舒服
-    if (intensity < 40) return '😟'; // 有點痛苦
-    if (intensity < 60) return '😰'; // 很痛苦
-    if (intensity < 80) return '😭'; // 非常痛苦
+    if (intensity < 5) return '😐'; // 開始不舒服
+    if (intensity < 15) return '😟'; // 有點痛苦
+    if (intensity < 30) return '😰'; // 很痛苦
+    if (intensity < 50) return '😭'; // 非常痛苦
     return '😱'; // 極度痛苦
   };
   
@@ -145,9 +145,8 @@ export default function HomeScreen() {
       const remainingTime = Math.max(0, 5000 - timeSinceLastBite);
       
       if (remainingTime > 0) {
-        console.log(`⏰ 設置 ${remainingTime}ms 後自動發送訊號，當前強度:`, intensity);
+        // console.log(`⏰ 設置 ${remainingTime}ms 後自動發送訊號`);
         autoSendTimeoutRef.current = setTimeout(() => {
-        console.log('⏰ 5秒無操作，自動發送訊號，強度:', intensity);
           sendSignal(intensity);
           // 重置
           setIntensity(0);
@@ -156,7 +155,6 @@ export default function HomeScreen() {
         }, remainingTime);
       } else {
         // 已經超過5秒，立即發送
-        console.log('⏰ 已超過5秒，立即發送訊號，強度:', intensity);
         sendSignal(intensity);
         setIntensity(0);
         setBiteCount(0);
@@ -183,10 +181,9 @@ export default function HomeScreen() {
     // 播放咬指甲動畫
     playBiteAnimation();
     
-    // 增加強度（每次咬指甲 +5，最多200）
+    // 增加強度（每次咬指甲 +1）
     setIntensity(prev => {
-      const newIntensity = Math.min(prev + 5, 200);
-      console.log('😬 咬指甲，強度:', newIntensity);
+      const newIntensity = prev + 1;
       return newIntensity;
     });
     setBiteCount(prev => prev + 1);
@@ -195,28 +192,6 @@ export default function HomeScreen() {
     setLastBiteTime(Date.now());
     
     // 重置5秒計時器（會在 useEffect 中處理）
-  };
-
-  const playPickAnimation = () => {
-    fingerAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(fingerAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.spring(fingerAnim, {
-        toValue: 0,
-        tension: 100,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handlePick = () => {
-    playPickAnimation();
-    setPickCount(prev => prev + 1);
   };
 
   const sendSignal = async (intensityValue: number = 0) => {
@@ -362,52 +337,14 @@ export default function HomeScreen() {
               <Text style={styles.todayValue}>{todaySignalCount}</Text>
             </View>
             <View style={styles.todayCard}>
-              <Text style={styles.todayLabel}>今日累積強度</Text>
-              <Text style={styles.todayValue}>{todayIntensitySum}</Text>
+              <Text style={styles.todayLabel}>今日點擊次數</Text>
+              <Text style={styles.todayValue}>{todayIntensitySum + intensity}</Text>
             </View>
           </View>
           {!lonelySignal ? (
             <View style={styles.lonelyContainer}>
               <View style={styles.heartWrapper}>
-                <View style={styles.babyHandSection}>
-                  <View style={styles.handArtContainer}>
-                    <Image source={require('../../assets/baby-hand.png')} style={styles.handImage} />
-                    <Animated.View
-                      style={[
-                        styles.fingerOverlay,
-                        {
-                          transform: [
-                            {
-                              translateY: fingerAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, -18],
-                              }),
-                            },
-                            {
-                              translateX: fingerAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, -12],
-                              }),
-                            },
-                            {
-                              rotate: fingerAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: ['0deg', '-12deg'],
-                              }),
-                            },
-                          ],
-                        },
-                      ]}
-                    />
-                  </View>
-                  <TouchableOpacity style={styles.pickButton} activeOpacity={0.85} onPress={handlePick}>
-                    <Text style={styles.pickButtonText}>摳一下手</Text>
-                  </TouchableOpacity>
-                  {pickCount > 0 && (
-                    <Text style={styles.pickCountText}>今天已摳手 {pickCount} 次</Text>
-                  )}
-                </View>
-
+                
                 <Animated.View
                   style={[
                     styles.lonelyCircle,
@@ -465,7 +402,7 @@ export default function HomeScreen() {
                 {intensity > 0 && (
                   <View style={styles.intensityContainer}>
                     <View style={styles.intensityBox}>
-                      <Text style={styles.intensityLabel}>焦慮強度指數</Text>
+                      <Text style={styles.intensityLabel}>焦慮指數</Text>
                       <Text style={styles.intensityValue}>{intensity}</Text>
                     </View>
                   </View>
@@ -474,11 +411,10 @@ export default function HomeScreen() {
               
               <Text style={styles.mainText}>感到焦慮了嗎？</Text>
               <Text style={styles.subText}>
-                咬指甲累積強度{'\n'}
-                5秒不咬指甲會自動發送訊號
+                5秒停止點擊會自動發送訊號
               </Text>
               {biteCount > 0 && (
-                <Text style={styles.biteCountText}>今天已咬指甲 {biteCount} 次</Text>
+                <Text style={styles.biteCountText}>今天已點擊 {biteCount} 次</Text>
               )}
             </View>
           ) : (
@@ -720,15 +656,21 @@ const styles = StyleSheet.create({
   },
   fingerOverlay: {
     position: 'absolute',
-    width: 56,
-    height: 90,
-    borderRadius: 30,
+    width: 50,
+    height: 85,
+    borderRadius: 25,
     backgroundColor: '#F4A460',
-    bottom: 70,
-    right: 76,
+    bottom: 72,
+    right: 78,
     shadowColor: '#D36B2A',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 2, height: 2 },
+    // 讓形狀更像大拇指（上窄下寬）
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
   pickButton: {
     backgroundColor: '#FFE0E0',

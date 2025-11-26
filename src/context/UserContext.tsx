@@ -72,7 +72,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const trackTodaySignal = (intensity: number) => {
     ensureToday();
     setTodaySignalCount(prev => prev + 1);
-    setTodayIntensitySum(prev => prev + Math.max(0, Math.min(100, Math.floor(intensity))));
+    setTodayIntensitySum(prev => prev + Math.floor(intensity));
   };
 
   // 註冊
@@ -250,7 +250,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           userAge: item.responder_age,
           distance: 0, // 後端沒有提供距離，可以後續計算
           timestamp: new Date(item.created_at).getTime(),
-          message: item.message || '我陪你',
+          message: item.message || '拍拍你',
           isRead: false, // 後端沒有提供此欄位
         }));
         

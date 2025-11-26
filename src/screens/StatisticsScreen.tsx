@@ -82,11 +82,11 @@ export default function StatisticsScreen() {
           totalSignalsSent: response.data.totalSignalsSent || 0,
           totalResponsesReceived: response.data.totalResponsesReceived || 0,
           totalAccompanied: response.data.totalAccompanied || 0,
-          peopleHelped: 0, // 可以後續計算
-          avgResponseTime: 0, // 可以後續計算
+          peopleHelped: response.data.peopleHelped || 0,
+          avgResponseTime: response.data.avgResponseTime || 0,
           activeDays: new Set(signals.map((s: any) => new Date(s.created_at).toDateString())).size,
           avgIntensity: avgIntensity,
-          maxIntensity: 0, // 可以後續計算
+          maxIntensity: todayIntensitySum, // 改為顯示今日總數
           signalHourlyData: hourlyData,
           dailyActivity: dailyData,
         });
@@ -384,7 +384,7 @@ export default function StatisticsScreen() {
               >
                 <Ionicons name="pulse" size={30} color="white" />
                 <Text style={styles.statCardValue}>{statistics.avgIntensity}</Text>
-                <Text style={styles.statCardLabel}>平均強度指數</Text>
+                <Text style={styles.statCardLabel}>平均點擊次數</Text>
               </LinearGradient>
             </View>
           </View>
@@ -412,15 +412,15 @@ export default function StatisticsScreen() {
               <View style={[styles.detailRow, { borderBottomWidth: 1 }]}>
                 <View style={styles.detailLeft}>
                   <Ionicons name="pulse" size={20} color="#666" />
-                  <Text style={styles.detailLabel}>平均強度指數</Text>
+                  <Text style={styles.detailLabel}>平均點擊次數</Text>
                 </View>
                 <Text style={styles.detailValue}>{statistics.avgIntensity}</Text>
               </View>
 
               <View style={[styles.detailRow, { borderBottomWidth: 1 }]}>
                 <View style={styles.detailLeft}>
-                  <Ionicons name="trending-up" size={20} color="#666" />
-                  <Text style={styles.detailLabel}>最高強度指數</Text>
+                  <Ionicons name="stats-chart" size={20} color="#666" />
+                  <Text style={styles.detailLabel}>今日總點擊次數</Text>
                 </View>
                 <Text style={styles.detailValue}>{statistics.maxIntensity}</Text>
               </View>

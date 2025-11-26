@@ -43,7 +43,7 @@ export default function ListScreen() {
         const response = await getNearbySignals(location);
         if (!response.success) {
           // API 失敗時使用模擬數據（不顯示錯誤）
-          console.log('使用模擬數據');
+          // console.log('使用模擬數據');
           const mockSignals: LonelySignal[] = [
             {
               id: '1',
@@ -110,7 +110,7 @@ export default function ListScreen() {
         }
       } catch (error) {
         // 捕获所有错误，使用模拟数据
-        console.log('API 调用失败，使用模拟数据');
+        // console.log('API 调用失败，使用模拟数据');
         const mockSignals: LonelySignal[] = [
           {
             id: '1',
@@ -195,12 +195,12 @@ export default function ListScreen() {
   const onRespond = async (signalId: string) => {
     const response = await respondToSignal(signalId);
     if (!response.success) {
-      console.error('❌ 回應信號失敗:', response.error);
+      // console.error('❌ 回應信號失敗:', response.error);
       Alert.alert('回應失敗', response.error || '未知錯誤');
     } else {
       // UserContext 中的 respondToSignal 已經會自動從列表中移除信號
       // 不需要立即重新載入，避免信號重新出現
-      console.log('✅ 回應成功，信號已從列表中移除');
+      // console.log('✅ 回應成功，信號已從列表中移除');
     }
   };
 
@@ -322,7 +322,7 @@ export default function ListScreen() {
           style={styles.accompanyGradient}
         >
           <Ionicons name="heart" size={16} color="white" />
-          <Text style={styles.accompanyText}>我陪你</Text>
+          <Text style={styles.accompanyText}>拍拍你</Text>
         </LinearGradient>
         </TouchableOpacity>
       </View>

@@ -10,13 +10,13 @@ const getApiBaseUrl = (): string => {
   const configApiUrl = Constants.expoConfig?.extra?.apiUrl;
   
   // 添加日誌來調試
-  console.log('🔍 API URL 配置檢查:');
-  console.log('  - Constants.expoConfig?.extra?.apiUrl:', configApiUrl);
-  console.log('  - Constants.appOwnership:', Constants.appOwnership);
-  console.log('  - Constants.executionEnvironment:', Constants.executionEnvironment);
+  // console.log('🔍 API URL 配置檢查:');
+  // console.log('  - Constants.expoConfig?.extra?.apiUrl:', configApiUrl);
+  // console.log('  - Constants.appOwnership:', Constants.appOwnership);
+  // console.log('  - Constants.executionEnvironment:', Constants.executionEnvironment);
   
   if (configApiUrl) {
-    console.log('✅ 使用配置的 API URL:', configApiUrl);
+    // console.log('✅ 使用配置的 API URL:', configApiUrl);
     return configApiUrl;
   }
   
@@ -28,12 +28,12 @@ const getApiBaseUrl = (): string => {
     ? 'http://localhost:3001/api/v1'
     : 'https://beside-backend-production.up.railway.app/api/v1';
   
-  console.log('⚠️ 使用默認 API URL:', defaultUrl);
+  // console.log('⚠️ 使用默認 API URL:', defaultUrl);
   return defaultUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();
-console.log('🌐 最終使用的 API Base URL:', API_BASE_URL);
+// console.log('🌐 最終使用的 API Base URL:', API_BASE_URL);
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -56,11 +56,11 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseURL}${endpoint}`;
-      console.log('📡 API 請求:', {
-        method: options.method || 'GET',
-        url: url,
-        body: options.body ? JSON.parse(options.body as string) : undefined,
-      });
+      // console.log('📡 API 請求:', {
+      //   method: options.method || 'GET',
+      //   url: url,
+      //   body: options.body ? JSON.parse(options.body as string) : undefined,
+      // });
       
       const response = await fetch(url, {
         headers: {
@@ -70,7 +70,7 @@ class ApiService {
         ...options,
       });
 
-      console.log('📡 API 響應狀態:', response.status, response.statusText);
+      // console.log('📡 API 響應狀態:', response.status, response.statusText);
       
       // 檢查響應是否成功
       if (!response.ok) {
@@ -88,7 +88,7 @@ class ApiService {
       }
       
       const data = await response.json();
-      console.log('📡 API 響應數據:', data);
+      // console.log('📡 API 響應數據:', data);
       
       // 只在錯誤時記錄日誌
       if (!data.success) {

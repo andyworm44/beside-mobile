@@ -47,7 +47,7 @@ export default function ReceivedScreen() {
         userAge: '25歲',
         distance: 0.3,
         timestamp: Date.now() - 300000, // 5分鐘前
-        message: '我陪你',
+        message: '拍拍你',
         isRead: false,
       },
       {
@@ -57,7 +57,7 @@ export default function ReceivedScreen() {
         userAge: '22歲',
         distance: 0.8,
         timestamp: Date.now() - 600000, // 10分鐘前
-        message: '我陪你',
+        message: '拍拍你',
         isRead: true,
       },
       {
@@ -67,7 +67,7 @@ export default function ReceivedScreen() {
         userAge: '28歲',
         distance: 1.2,
         timestamp: Date.now() - 900000, // 15分鐘前
-        message: '我陪你',
+        message: '拍拍你',
         isRead: true,
       },
       {
@@ -77,7 +77,7 @@ export default function ReceivedScreen() {
         userAge: '24歲',
         distance: 1.5,
         timestamp: Date.now() - 1200000, // 20分鐘前
-        message: '我陪你',
+        message: '拍拍你',
         isRead: false,
       },
     ];
@@ -148,7 +148,7 @@ export default function ReceivedScreen() {
         {!item.isRead && <View style={styles.unreadDot} />}
       </View>
 
-      <Text style={styles.messageText}>{item.message}</Text>
+      <Text style={styles.messageText}>{item.message === '我陪你' ? '拍拍你' : item.message}</Text>
 
       <View style={styles.cardFooter}>
         <View style={styles.timeContainer}>
