@@ -25,7 +25,6 @@ import TestListScreen from './src/screens/TestListScreen';
 import ReceivedScreen from './src/screens/ReceivedScreen';
 import TestReceivedScreen from './src/screens/TestReceivedScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import TestSettingsScreen from './src/screens/TestSettingsScreen';
 import StatisticsScreen from './src/screens/StatisticsScreen';
 
 // Icons
@@ -97,7 +96,7 @@ function MainTabs() {
       />
       <Tab.Screen 
         name="Settings" 
-        component={TestSettingsScreen}
+        component={SettingsScreen}
         options={{ tabBarLabel: '設置' }}
       />
     </Tab.Navigator>
@@ -145,7 +144,7 @@ function AppNavigator() {
       }}
     >
       <Stack.Screen name="Main" component={MainTabs} />
-      <Stack.Screen name="Settings" component={TestSettingsScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Statistics" component={StatisticsScreen} />
     </Stack.Navigator>
   );
