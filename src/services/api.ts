@@ -56,11 +56,11 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseURL}${endpoint}`;
-      // console.log('📡 API 請求:', {
-      //   method: options.method || 'GET',
-      //   url: url,
-      //   body: options.body ? JSON.parse(options.body as string) : undefined,
-      // });
+      console.log('📡 API 請求:', {
+        method: options.method || 'GET',
+        url: url,
+        body: options.body,
+      });
       
       const response = await fetch(url, {
         headers: {
@@ -88,7 +88,7 @@ class ApiService {
       }
       
       const data = await response.json();
-      // console.log('📡 API 響應數據:', data);
+      console.log('📡 API 響應數據:', data);
       
       // 只在錯誤時記錄日誌
       if (!data.success) {
@@ -133,6 +133,8 @@ class ApiService {
     name: string;
     gender: 'male' | 'female' | 'other';
     birthday: string;
+    email: string;
+    password: string;
     phone?: string;
   }): Promise<ApiResponse> {
     return this.request('/auth/register', {
@@ -142,10 +144,10 @@ class ApiService {
   }
 
   // 用戶登入
-  async login(phone: string, password: string): Promise<ApiResponse> {
+  async login(email: string, password: string): Promise<ApiResponse> {
     return this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ phone, password }),
+      body: JSON.stringify({ email, password }),
     });
   }
 

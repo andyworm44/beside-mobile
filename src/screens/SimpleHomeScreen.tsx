@@ -12,8 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 export default function SimpleHomeScreen() {
   const [lonelySignal, setLonelySignal] = useState(false);
   const [responseCount, setResponseCount] = useState(0);
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.8);
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const scaleAnim = React.useRef(new Animated.Value(0.8)).current;
 
   React.useEffect(() => {
     Animated.parallel([

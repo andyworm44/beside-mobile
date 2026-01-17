@@ -47,7 +47,7 @@
         "buildType": "apk"
       },
       "env": {
-        "API_URL": "https://your-production-server.com/api/v1"
+        "API_URL": "https://beside-backend-production.up.railway.app/api/v1"
       }
     }
   },

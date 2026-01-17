@@ -48,19 +48,40 @@ export default function SettingsScreen() {
 
     setIsSaving(true);
     try {
+      if (user) {
+        console.log('準備更新暱稱:', { newName: newName.trim(), userId: user.id });
+      }
       const response = await apiService.updateProfile(authToken, { name: newName.trim() });
+      console.log('更新暱稱結果:', response);
+      
       if (response.success) {
         // 更新本地 user state
         if (user) {
-          setUser({ ...user, name: newName.trim() });
+          // 確保所有必要的屬性都存在
+          setUser({
+            ...user,
+            name: newName.trim()
+          });
         }
+        
+        // 確保 Modal 先關閉
         setEditNameVisible(false);
-        Alert.alert('成功', '暱稱已更新');
+        
+        // 使用 setTimeout 來延遲 Alert，避免動畫衝突
+        setTimeout(() => {
+          Alert.alert('成功', '暱稱已更新');
+        }, 500);
       } else {
-        Alert.alert('錯誤', response.error || '更新失敗');
+        setEditNameVisible(false);
+        setTimeout(() => {
+          Alert.alert('錯誤', response.error || '更新失敗');
+        }, 500);
       }
     } catch (error) {
-      Alert.alert('錯誤', '網絡錯誤');
+      setEditNameVisible(false);
+      setTimeout(() => {
+        Alert.alert('錯誤', '網絡錯誤');
+      }, 500);
     } finally {
       setIsSaving(false);
     }
@@ -77,7 +98,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: () => {
             setLoggedIn(false);
-            navigation.navigate('Welcome' as never);
+            // navigation.navigate('Welcome' as never); // 移除這行，因為 setLoggedIn(false) 會自動觸發 AppNavigator 切換到 Auth Stack
           },
         },
       ]
@@ -91,11 +112,11 @@ export default function SettingsScreen() {
         { 
           label: '暱稱', 
           value: user?.name, 
-          hasArrow: true,
-          onPress: () => {
-            setNewName(user?.name || '');
-            setEditNameVisible(true);
-          }
+          // hasArrow: true, // 暫時隱藏編輯功能
+          // onPress: () => {
+          //   setNewName(user?.name || '');
+          //   setEditNameVisible(true);
+          // }
         },
         { label: '性別', value: user?.gender === 'male' ? '男' : user?.gender === 'female' ? '女' : '其他', hasArrow: true },
         { label: '生日', value: user?.birthday, hasArrow: true },

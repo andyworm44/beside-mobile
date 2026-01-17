@@ -16,6 +16,8 @@ export default function RegistrationScreen() {
   const navigation = useNavigation();
   const { register } = useUser();
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [gender, setGender] = useState('male' as 'male' | 'female' | 'other');
   const [birthday, setBirthday] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -62,6 +64,16 @@ export default function RegistrationScreen() {
       return;
     }
 
+    if (!email.trim() || !email.includes('@')) {
+      alert('請輸入有效的 Email');
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      alert('密碼長度至少需要 6 個字元');
+      return;
+    }
+
     if (!birthday.trim()) {
       alert('請輸入生日');
       return;
@@ -78,6 +90,8 @@ export default function RegistrationScreen() {
       // 調用真實的註冊 API
       const response = await register({
         name: name.trim(),
+        email: email.trim(),
+        password: password,
         gender: gender,
         birthday: birthday.trim(),
       });
@@ -85,10 +99,7 @@ export default function RegistrationScreen() {
       if (response.success) {
         // 註冊成功，已經在 UserContext 中設置了用戶和登入狀態
         // App.tsx 會根據 isLoggedIn 狀態自動切換到主畫面
-        // 不需要手動導航，等待狀態更新即可
         console.log('✅ 註冊成功，等待導航到主畫面...');
-        // 不設置 setIsLoading(false)，讓用戶看到成功狀態
-        // 如果 2 秒後還沒導航，顯示錯誤
         setTimeout(() => {
           setIsLoading(false);
         }, 2000);
@@ -117,7 +128,7 @@ export default function RegistrationScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>創建你的資料</Text>
+            <Text style={styles.title}>創建你的帳號</Text>
             <Text style={styles.subtitle}>簡單幾步，開始溫暖的陪伴</Text>
           </View>
 
@@ -136,6 +147,36 @@ export default function RegistrationScreen() {
                 maxLength={20}
                 keyboardType="default"
                 textContentType="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email (帳號)</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="輸入你的 Email"
+                placeholderTextColor="#999"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                returnKeyType="done"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>密碼</Text>
+              <TextInput
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="設定密碼 (至少6位)"
+                placeholderTextColor="#999"
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry
+                returnKeyType="done"
               />
             </View>
 
@@ -239,7 +280,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inputGroup: {
-    marginBottom: 30,
+    marginBottom: 24,
   },
   label: {
     fontSize: 14,

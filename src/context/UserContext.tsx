@@ -37,14 +37,15 @@ interface UserContextType {
   todayIntensitySum: number;
   trackTodaySignal: (intensity: number) => void;
   // API 方法
-  register: (userData: { name: string; gender: 'male' | 'female' | 'other'; birthday: string; phone?: string }) => Promise<any>;
-  login: (phone: string, password: string) => Promise<any>;
+  register: (userData: { name: string; gender: 'male' | 'female' | 'other'; birthday: string; email: string; password: string; phone?: string }) => Promise<any>;
+  login: (email: string, password: string) => Promise<any>;
   logout: () => void;
   createSignal: (location?: { latitude: number; longitude: number }) => Promise<any>;
   getNearbySignals: (location: { latitude: number; longitude: number; radius?: number }) => Promise<any>;
   respondToSignal: (signalId: string, message?: string) => Promise<any>;
   cancelSignal: (signalId: string) => Promise<any>;
   getMyResponses: () => Promise<any>;
+  markResponseAsThanked: (responseId: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -55,6 +56,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [lonelySignal, setLonelySignal] = useState<LonelySignal | null>(null);
   const [nearbySignals, setNearbySignals] = useState<LonelySignal[]>([]);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [thankedResponseIds, setThankedResponseIds] = useState<string[]>([]);
   // 今日統計
   const [todaySignalCount, setTodaySignalCount] = useState<number>(0);
   const [todayIntensitySum, setTodayIntensitySum] = useState<number>(0);
@@ -76,9 +78,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // 註冊
-  const register = async (userData: { name: string; gender: 'male' | 'female' | 'other'; birthday: string; phone?: string }) => {
+  const register = async (userData: { name: string; gender: 'male' | 'female' | 'other'; birthday: string; email: string; password: string; phone?: string }) => {
     try {
-      console.log('📝 開始註冊，用戶資料:', userData);
+      console.log('📝 開始註冊，用戶資料:', { ...userData, password: '***' });
       const response = await apiService.register(userData);
       console.log('📝 註冊 API 響應:', response);
       
@@ -117,9 +119,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // 登入
-  const login = async (phone: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      const response = await apiService.login(phone, password);
+      const response = await apiService.login(email, password);
       if (response.success) {
         setUser(response.data.user);
         setAuthToken(response.data.session?.access_token);
@@ -233,6 +235,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // 標記回應為已感謝
+  const markResponseAsThanked = (responseId: string) => {
+    setThankedResponseIds(prev => {
+      if (!prev.includes(responseId)) {
+        return [...prev, responseId];
+      }
+      return prev;
+    });
+  };
+
   // 獲取我的回應
   const getMyResponses = async () => {
     try {
@@ -254,8 +266,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           isRead: false, // 後端沒有提供此欄位
         }));
         
+        // 過濾掉已感謝的回應
+        const filteredResponses = formattedResponses.filter((r: any) => !thankedResponseIds.includes(r.id));
+        
         // 只返回最新的一個回應（確保只顯示一個）
-        const latestResponse = formattedResponses.length > 0 ? [formattedResponses[0]] : [];
+        const latestResponse = filteredResponses.length > 0 ? [filteredResponses[0]] : [];
         
         return { success: true, data: latestResponse };
       }
@@ -290,6 +305,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         respondToSignal,
         cancelSignal,
         getMyResponses,
+        markResponseAsThanked,
       }}
     >
       {children}

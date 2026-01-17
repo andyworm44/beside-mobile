@@ -24,7 +24,7 @@ interface Response {
 }
 
 export default function ReceivedScreen() {
-  const { getMyResponses } = useUser();
+  const { getMyResponses, markResponseAsThanked } = useUser();
   const [responses, setResponses] = useState<Response[]>([]);
   
   // 每次進入頁面時重新載入回應
@@ -122,6 +122,9 @@ export default function ReceivedScreen() {
 
   const onResponsePress = (responseId: string) => {
     console.log('回應:', responseId);
+    // 標記為已感謝
+    markResponseAsThanked(responseId);
+
     // 從列表中移除該回應
     setResponses(prevResponses => {
       const newResponses = prevResponses.filter(response => response.id !== responseId);

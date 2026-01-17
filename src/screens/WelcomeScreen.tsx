@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,9 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
-  const fadeAnim = new Animated.Value(0);
-  const textOpacity = new Animated.Value(0);
-  const textTranslateY = new Animated.Value(20);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+  const textTranslateY = useRef(new Animated.Value(20)).current;
 
   React.useEffect(() => {
     Animated.parallel([
